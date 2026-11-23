@@ -313,6 +313,16 @@ model ContactRequest {
   @@index([status, expiresAt])
 }
 
+/// Private files (internship certificates) when STORAGE_DRIVER=database.
+/// Never exposed directly: served only through the signed, admin-only file route.
+model StoredFile {
+  key       String   @id
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
 model Notification {
   id        String           @id @default(cuid())
   userId    String

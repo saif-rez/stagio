@@ -1,4 +1,4 @@
-# Déployer Stagio (Vercel + Render + Neon + Supabase Storage)
+# Déployer Stagio (Vercel + Render + Neon)
 
 ```
 Navigateur ──► https://<site>.vercel.app          (frontend, Vercel)
@@ -6,7 +6,7 @@ Navigateur ──► https://<site>.vercel.app          (frontend, Vercel)
                    ▼
               https://stagio-api.onrender.com       (backend Express, Render gratuit)
                    ├── PostgreSQL : Neon
-                   ├── Attestations : bucket privé Supabase Storage
+                   ├── Attestations : table privée dans Neon (STORAGE_DRIVER=database)
                    └── Emails : Gmail SMTP
 cron-job.org ──► POST /api/internal/cron/hourly | /digest   (tâches planifiées)
 ```
@@ -14,21 +14,11 @@ cron-job.org ──► POST /api/internal/cron/hourly | /digest   (tâches plani
 Le navigateur ne parle qu'au site Vercel : le cookie de session reste « first-party »
 et fonctionne partout (Safari compris), même sans nom de domaine.
 
-Durée totale : environ 30 minutes. Ordre conseillé : 1 → 2 → 3 → 4 → 5.
+Durée totale : environ 20 minutes. Ordre : 1 → 2 → 3 → 4.
 
 ---
 
-## 1. Supabase Storage (attestations privées)
-
-Le disque de Render est effacé à chaque redéploiement : les attestations vont dans un bucket.
-
-1. Crée un projet sur [supabase.com](https://supabase.com) (région Europe, ex. Frankfurt).
-2. **Storage → New bucket** : nom `certificates`, **Public : désactivé**.
-3. **Project Settings → Storage → S3 Connection** :
-   - note l'**Endpoint** (ex. `https://xxxx.supabase.co/storage/v1/s3`) et la **Region** ;
-   - **New access key** → note l'**Access key ID** et la **Secret access key** (affichée une seule fois).
-
-## 2. Render (backend)
+## 1. Render (backend)
 
 1. Crée un compte sur [render.com](https://render.com) avec ton GitHub.
 2. **New → Blueprint** → choisis le dépôt `saif-rez/stagio` → Render lit `render.yaml`.
@@ -36,11 +26,10 @@ Le disque de Render est effacé à chaque redéploiement : les attestations vont
 
 | Variable | Valeur |
 | --- | --- |
-| `FRONTEND_URL` | provisoirement `https://example.com` (corrigé à l'étape 4) |
+| `FRONTEND_URL` | provisoirement `https://example.com` (corrigé à l'étape 3) |
 | `API_URL` | idem |
 | `DATABASE_URL` | URL Neon **avec** `-pooler`, suivie de `&pgbouncer=true` (copie de `back/.env`) |
 | `DIRECT_URL` | URL Neon **sans** `-pooler` (copie de `back/.env`) |
-| `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | étape 1 |
 | `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | copie de `back/.env` |
 
 `JWT_SECRET`, `FILE_URL_SECRET` et `CRON_SECRET` sont générés automatiquement par Render.
@@ -52,7 +41,7 @@ Le disque de Render est effacé à chaque redéploiement : les attestations vont
 
 > Si le nom `stagio-api` est déjà pris, Render en propose un autre : utilise l'URL réelle partout.
 
-## 3. Vercel (frontend)
+## 2. Vercel (frontend)
 
 1. Crée un compte sur [vercel.com](https://vercel.com) avec ton GitHub.
 2. **Add New → Project** → importe `saif-rez/stagio`.
@@ -65,7 +54,7 @@ Le disque de Render est effacé à chaque redéploiement : les attestations vont
 
 5. **Deploy**. Note l'adresse obtenue, ex. `https://stagio.vercel.app`.
 
-## 4. Relier les deux
+## 3. Relier les deux
 
 Dans Render → `stagio-api` → **Environment** :
 
@@ -74,7 +63,7 @@ Dans Render → `stagio-api` → **Environment** :
 
 **Save Changes** → Render redémarre.
 
-## 5. Tâches planifiées (cron-job.org)
+## 4. Tâches planifiées (cron-job.org)
 
 Render gratuit s'endort après 15 min sans visite : les tâches sont déclenchées de l'extérieur.
 
@@ -112,4 +101,5 @@ Les nouvelles migrations Prisma s'appliquent au démarrage du backend.
 - Render s'endort après 15 min : première requête lente (~1 min). La tâche horaire de
   cron-job.org le réveille une fois par heure. Passer en Starter (7 $/mois) supprime ce délai.
 - Gmail : ~500 emails/jour. Au-delà, passer à Brevo ou Resend (changer `SMTP_*` sur Render).
-- Attestations : 4 Mo maximum (limite de taille des requêtes Vercel : 4,5 Mo).
+- Attestations : 4 Mo maximum (limite de taille des requêtes Vercel : 4,5 Mo). Elles sont stockées
+  dans Neon (0,5 Go gratuits, soit plusieurs centaines d'attestations).

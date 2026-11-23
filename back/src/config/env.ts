@@ -24,8 +24,9 @@ const schema = z.object({
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
   // Number of reverse proxies in front of Express (Vercel proxy + Render load balancer = 2).
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
-  // Private file storage: local disk (dev) or S3-compatible bucket (Supabase Storage, R2, AWS).
-  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  // Private file storage: local disk (dev), PostgreSQL table (hosts with ephemeral disks,
+  // no extra service), or an S3-compatible bucket (Supabase Storage, R2, AWS).
+  STORAGE_DRIVER: z.enum(["local", "database", "s3"]).default("local"),
   STORAGE_DIR: z.string().default("./storage"),
   S3_ENDPOINT: z.url().optional(),
   S3_REGION: z.string().default("us-east-1"),

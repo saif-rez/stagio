@@ -12,6 +12,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { env } from "../config/env.js";
 import { badRequest } from "./errors.js";
+import { prisma } from "./prisma.js";
 
 const root = path.resolve(env.STORAGE_DIR, "certificates");
 
@@ -29,6 +30,12 @@ const objectKey = (key: string) => `certificates/${key}`;
 
 const driver = {
   async put(key: string, buffer: Buffer, contentType: string) {
+    if (env.STORAGE_DRIVER === "database") {
+      await prisma.storedFile.create({
+        data: { key, mime: contentType, size: buffer.length, data: new Uint8Array(buffer) },
+      });
+      return;
+    }
     if (env.STORAGE_DRIVER === "s3") {
       const { client, Bucket } = bucket();
       await client.send(
@@ -40,6 +47,10 @@ const driver = {
     await writeFile(path.join(root, key), buffer, { mode: 0o600 });
   },
   async get(key: string): Promise<Buffer> {
+    if (env.STORAGE_DRIVER === "database") {
+      const file = await prisma.storedFile.findUniqueOrThrow({ where: { key }, select: { data: true } });
+      return Buffer.from(file.data);
+    }
     if (env.STORAGE_DRIVER === "s3") {
       const { client, Bucket } = bucket();
       const res = await client.send(new GetObjectCommand({ Bucket, Key: objectKey(key) }));
@@ -48,6 +59,10 @@ const driver = {
     return readFile(path.join(root, key));
   },
   async remove(key: string) {
+    if (env.STORAGE_DRIVER === "database") {
+      await prisma.storedFile.deleteMany({ where: { key } });
+      return;
+    }
     if (env.STORAGE_DRIVER === "s3") {
       const { client, Bucket } = bucket();
       await client.send(new DeleteObjectCommand({ Bucket, Key: objectKey(key) }));
