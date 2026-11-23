@@ -315,7 +315,7 @@ function DeclareDialog({ open, onClose }: { open: boolean; onClose: () => void }
             <Upload size={30} />
             <strong>Votre attestation de stage</strong>
             <p className="form-note mt-2">
-              Facultatif · PDF, JPG ou PNG · 5 Mo maximum. Visible uniquement par l’équipe Stagio.
+              Facultatif · PDF, JPG ou PNG · 4 Mo maximum. Visible uniquement par l’équipe Stagio.
               Une fois validée, votre avis obtient le badge « Stage vérifié ».
             </p>
             <input

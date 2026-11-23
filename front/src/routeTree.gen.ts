@@ -22,6 +22,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OffresRouteImport } from './routes/offres'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as VerificationRouteImport } from './routes/verification'
+import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as EntrepriseAvisRouteImport } from './routes/entreprise_.avis'
 import { Route as EntrepriseOffresRouteImport } from './routes/entreprise_.offres'
 import { Route as EntreprisesIdRouteImport } from './routes/entreprises_.$id'
@@ -92,6 +93,11 @@ const VerificationRoute = VerificationRouteImport.update({
   path: '/verification',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrepriseAvisRoute = EntrepriseAvisRouteImport.update({
   id: '/entreprise_/avis',
   path: '/entreprise/avis',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/offres': typeof OffresRoute
   '/profil': typeof ProfilRoute
   '/verification': typeof VerificationRoute
+  '/api/$': typeof ApiSplatRoute
   '/entreprise/avis': typeof EntrepriseAvisRoute
   '/entreprise/offres': typeof EntrepriseOffresRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/offres': typeof OffresRoute
   '/profil': typeof ProfilRoute
   '/verification': typeof VerificationRoute
+  '/api/$': typeof ApiSplatRoute
   '/entreprise/avis': typeof EntrepriseAvisRoute
   '/entreprise/offres': typeof EntrepriseOffresRoute
   '/entreprises/$id': typeof EntreprisesIdRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/offres': typeof OffresRoute
   '/profil': typeof ProfilRoute
   '/verification': typeof VerificationRoute
+  '/api/$': typeof ApiSplatRoute
   '/entreprise_/avis': typeof EntrepriseAvisRoute
   '/entreprise_/offres': typeof EntrepriseOffresRoute
   '/entreprises_/$id': typeof EntreprisesIdRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/offres'
     | '/profil'
     | '/verification'
+    | '/api/$'
     | '/entreprise/avis'
     | '/entreprise/offres'
     | '/entreprises/$id'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/offres'
     | '/profil'
     | '/verification'
+    | '/api/$'
     | '/entreprise/avis'
     | '/entreprise/offres'
     | '/entreprises/$id'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/offres'
     | '/profil'
     | '/verification'
+    | '/api/$'
     | '/entreprise_/avis'
     | '/entreprise_/offres'
     | '/entreprises_/$id'
@@ -245,6 +257,7 @@ export interface RootRouteChildren {
   OffresRoute: typeof OffresRoute
   ProfilRoute: typeof ProfilRoute
   VerificationRoute: typeof VerificationRoute
+  ApiSplatRoute: typeof ApiSplatRoute
   EntrepriseAvisRoute: typeof EntrepriseAvisRoute
   EntrepriseOffresRoute: typeof EntrepriseOffresRoute
   EntreprisesIdRoute: typeof EntreprisesIdRoute
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerificationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entreprise_/avis': {
       id: '/entreprise_/avis'
       path: '/entreprise/avis'
@@ -389,6 +409,7 @@ const rootRouteChildren: RootRouteChildren = {
   OffresRoute: OffresRoute,
   ProfilRoute: ProfilRoute,
   VerificationRoute: VerificationRoute,
+  ApiSplatRoute: ApiSplatRoute,
   EntrepriseAvisRoute: EntrepriseAvisRoute,
   EntrepriseOffresRoute: EntrepriseOffresRoute,
   EntreprisesIdRoute: EntreprisesIdRoute,

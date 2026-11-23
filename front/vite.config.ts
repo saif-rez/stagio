@@ -17,13 +17,16 @@ export default defineConfig({
   },
   vite: {
     server: {
-      // Dev only: forward /api to the Express backend (/back) so the session cookie is same-origin.
-      proxy: {
-        "/api": {
-          target: process.env["API_PROXY_TARGET"] ?? "http://localhost:4000",
-          changeOrigin: true,
-        },
-      },
+      // Dev: forward /api to the Express backend (/back) so the session cookie is same-origin.
+      // When API_ORIGIN is set, the production proxy route (src/routes/api/$.ts) answers instead.
+      proxy: process.env["API_ORIGIN"]
+        ? {}
+        : {
+            "/api": {
+              target: process.env["API_PROXY_TARGET"] ?? "http://localhost:4000",
+              changeOrigin: true,
+            },
+          },
     },
   },
 });

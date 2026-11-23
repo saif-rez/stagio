@@ -1,0 +1,70 @@
+# Render Blueprint for the Stagio API (back/). Render → New → Blueprint → this repository.
+# Values marked `sync: false` are asked for in the Render dashboard (secrets never live in git).
+services:
+  - type: web
+    name: stagio-api
+    runtime: node
+    plan: free
+    region: frankfurt # closest Render region to Tunisia
+    rootDir: back
+    # NODE_ENV=production skips devDependencies, which the build needs (TypeScript, Prisma CLI).
+    buildCommand: npm ci --include=dev && npm run build
+    # Applies pending migrations (idempotent), then starts the server.
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      # Public site URL (Vercel), used for email links and CORS.
+      - key: FRONTEND_URL
+        sync: false
+      # Same value as FRONTEND_URL: certificate links go through the site's /api proxy.
+      - key: API_URL
+        sync: false
+      # Neon: pooled URL (+ &pgbouncer=true) and direct URL (without "-pooler") for migrations.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FILE_URL_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: COOKIE_SAMESITE
+        value: lax
+      # Vercel proxy + Render load balancer.
+      - key: TRUST_PROXY
+        value: "2"
+      # The free plan sleeps: jobs are triggered by cron-job.org instead (see DEPLOY.md).
+      - key: CRON_ENABLED
+        value: "false"
+      - key: MAX_UPLOAD_MB
+        value: "4"
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        value: certificates
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false

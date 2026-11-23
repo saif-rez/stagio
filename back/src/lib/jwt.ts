@@ -25,9 +25,10 @@ export function verifySession(token: string): SessionPayload | null {
 export function sessionCookieOptions() {
   return {
     httpOnly: true,
-    secure: isProd,
-    // Frontend and API are on different origins in production, which requires SameSite=None + Secure.
-    sameSite: isProd ? "none" : "lax",
+    // SameSite=None is only valid with Secure.
+    secure: isProd || env.COOKIE_SAMESITE === "none",
+    // The frontend proxies /api, so the cookie is first-party: "lax" is enough and safest.
+    sameSite: env.COOKIE_SAMESITE,
     maxAge: env.JWT_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000,
     path: "/",
   } satisfies CookieOptions;

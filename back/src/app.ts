@@ -16,13 +16,16 @@ import { internshipsRouter } from "./modules/internships/routes.js";
 import { notificationsRouter } from "./modules/notifications/routes.js";
 import { offersRouter } from "./modules/offers/routes.js";
 import { reviewsRouter } from "./modules/reviews/routes.js";
+import { internalRouter } from "./modules/internal/routes.js";
 
 export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
-  // Needed behind a proxy (Render, Railway, Fly…) for secure cookies and per-IP rate limits.
-  if (isProd) app.set("trust proxy", 1);
+  // Behind proxies (frontend /api proxy + Render load balancer), trust exactly that many hops
+  // so req.ip is the visitor's IP (per-IP rate limits) and cannot be spoofed further left.
+  const hops = env.TRUST_PROXY || (isProd ? 1 : 0);
+  if (hops) app.set("trust proxy", hops);
 
   app.use(helmet());
   app.use(
@@ -60,6 +63,7 @@ export function createApp() {
   app.use("/api/company", companyRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/files", filesRouter);
+  app.use("/api/internal", internalRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
