@@ -1,0 +1,328 @@
+// Stagio data model. Business rules enforced here when possible (unique constraints),
+// the rest in src/modules/*.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  /// Non-pooled connection for migrations (Neon "-pooler" hosts go through PgBouncer).
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  COMPANY
+  ADMIN
+}
+
+enum CompanyStatus {
+  ACTIVE // visible in the directory
+  PENDING // proposed by a student or created at company sign-up, awaiting admin
+  REFUSED
+}
+
+enum ClaimStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+}
+
+enum InternshipType {
+  PFE
+  SUMMER
+}
+
+enum InternshipStatus {
+  DECLARED // no certificate uploaded
+  PENDING_VERIFICATION // certificate uploaded, waiting for the admin
+  VERIFIED // "Stage vérifié"
+  REJECTED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN // auto-hidden after 3 reports, waiting for the admin
+  CHANGES_REQUESTED // hidden until the author edits it
+  REMOVED
+}
+
+enum ReportReason {
+  FAKE_REVIEW
+  INSULTS
+  PERSONAL_DATA
+  OFF_TOPIC
+}
+
+enum ContactStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+  EXPIRED
+}
+
+enum ContactChannel {
+  EMAIL
+  LINKEDIN
+  WHATSAPP
+}
+
+enum ApplicationMode {
+  LINK
+  EMAIL
+}
+
+enum OtpPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum NotificationType {
+  REVIEW_REPLY
+  CONTACT_REQUEST_RECEIVED
+  CONTACT_REQUEST_ACCEPTED
+  CONTACT_REQUEST_REFUSED
+  REVIEW_HIDDEN
+  REVIEW_REMOVED
+  REVIEW_CHANGES_REQUESTED
+  INTERNSHIP_VERIFIED
+  NEW_OFFERS_DIGEST
+  COMPANY_ACCOUNT_VALIDATED
+  COMPANY_ACCOUNT_REFUSED
+  NEW_REVIEW
+}
+
+/// Multi-faculty ready: ISGB is the pilot establishment.
+model Establishment {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  emailDomain String       @unique
+  createdAt   DateTime     @default(now())
+  users       User[]
+  internships Internship[]
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  passwordHash    String
+  name            String
+  role            Role
+  emailVerifiedAt DateTime?
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id])
+  /// Company owned by a validated COMPANY account.
+  companyId       String?        @unique
+  company         Company?       @relation("CompanyOwner", fields: [companyId], references: [id])
+  /// Daily digest of new offers in these domains (max once a day, can be disabled).
+  followedDomains String[]       @default([])
+  digestEnabled   Boolean        @default(true)
+  lastDigestAt    DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  otpCodes         OtpCode[]
+  internships      Internship[]
+  reviews          Review[]
+  reports          Report[]
+  claims           CompanyClaim[]
+  sentContacts     ContactRequest[] @relation("ContactRequester")
+  receivedContacts ContactRequest[] @relation("ContactRecipient")
+  notifications    Notification[]
+  offersCreated    Offer[]
+  companiesProposed Company[]       @relation("CompanyProposer")
+}
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose    OtpPurpose
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int        @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([userId, purpose])
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  name         String
+  city         String
+  sector       String
+  description  String        @default("")
+  status       CompanyStatus @default(PENDING)
+  proposedById String?
+  proposedBy   User?         @relation("CompanyProposer", fields: [proposedById], references: [id], onDelete: SetNull)
+  owner        User?         @relation("CompanyOwner")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  offers      Offer[]
+  internships Internship[]
+  reviews     Review[]
+  claims      CompanyClaim[]
+  replies     ReviewReply[]
+  reports     Report[]
+
+  @@index([status, name])
+}
+
+/// A company account asking to own a company page (new or existing), checked with tax ID / RNE.
+model CompanyClaim {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId  String
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  taxId      String
+  rne        String?
+  status     ClaimStatus @default(PENDING)
+  decidedAt  DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@index([status])
+}
+
+model Offer {
+  id               String          @id @default(cuid())
+  title            String
+  description      String
+  companyId        String
+  company          Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  city             String
+  type             InternshipType
+  domain           String
+  applicationMode  ApplicationMode
+  applicationUrl   String?
+  applicationEmail String?
+  /// Admin-published offers: "Source : LinkedIn" + original link.
+  sourceName       String?
+  sourceUrl        String?
+  sponsored        Boolean         @default(false)
+  sponsoredUntil   DateTime?
+  sponsorRequested Boolean         @default(false)
+  active           Boolean         @default(true)
+  views            Int             @default(0)
+  createdById      String?
+  createdBy        User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([active, sponsored, createdAt])
+  @@index([domain])
+}
+
+model Internship {
+  id              String           @id @default(cuid())
+  /// Null once the student deleted their account (review stays, anonymized).
+  studentId       String?
+  student         User?            @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  companyId       String
+  company         Company          @relation(fields: [companyId], references: [id])
+  establishmentId String
+  establishment   Establishment    @relation(fields: [establishmentId], references: [id])
+  year            Int
+  type            InternshipType
+  domain          String
+  status          InternshipStatus @default(DECLARED)
+  /// Private storage key of the internship certificate (admin-only access).
+  certificateKey  String?
+  createdAt       DateTime         @default(now())
+  review          Review?
+
+  @@index([status])
+}
+
+model Review {
+  id                String       @id @default(cuid())
+  /// One review per declared internship.
+  internshipId      String       @unique
+  internship        Internship   @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  authorId          String?
+  author            User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  companyId         String
+  company           Company      @relation(fields: [companyId], references: [id])
+  ratingSupervision Int
+  ratingAtmosphere  Int
+  ratingMissions    Int
+  comment           String
+  anonymous         Boolean      @default(false)
+  contactOptIn      Boolean      @default(false)
+  status            ReviewStatus @default(PUBLISHED)
+  reportCount       Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  reply    ReviewReply?
+  reports  Report[]
+  contacts ContactRequest[]
+
+  @@index([companyId, status])
+}
+
+model ReviewReply {
+  id        String   @id @default(cuid())
+  /// One public reply per review.
+  reviewId  String   @unique
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reviewId   String
+  review     Review       @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporterId String?
+  reporter   User?        @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  /// Set when the reporter is a company account.
+  companyId  String?
+  company    Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  reason     ReportReason
+  resolvedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  @@unique([reviewId, reporterId])
+}
+
+model ContactRequest {
+  id           String          @id @default(cuid())
+  reviewId     String
+  review       Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  requesterId  String
+  requester    User            @relation("ContactRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipientId  String
+  recipient    User            @relation("ContactRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  message      String          @db.VarChar(300)
+  status       ContactStatus   @default(PENDING)
+  /// Contact chosen by the former intern when accepting.
+  channel      ContactChannel?
+  channelValue String?
+  expiresAt    DateTime
+  respondedAt  DateTime?
+  createdAt    DateTime        @default(now())
+
+  @@index([requesterId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+}
