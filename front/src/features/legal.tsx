@@ -307,13 +307,16 @@ export function PrivacyPage() {
       </Section>
       <Section title="3. Finalités">
         <ul>
-          <li>Réserver l’inscription aux adresses institutionnelles des étudiants et vérifier les entreprises (matricule fiscal / RNE).</li>
+          <li>
+            Réserver l’inscription aux adresses institutionnelles des étudiants et vérifier les
+            entreprises (matricule fiscal / RNE).
+          </li>
           <li>Publier les avis et les offres, et calculer les notes des entreprises.</li>
           <li>Modérer les contenus signalés et lutter contre les faux avis.</li>
           <li>Mettre en relation les étudiants qui l’acceptent.</li>
           <li>
-            Envoyer les emails liés au service : codes de réinitialisation du mot de passe, notifications, et résumé des
-            nouvelles offres (désactivable dans votre profil).
+            Envoyer les emails liés au service : codes de réinitialisation du mot de passe,
+            notifications, et résumé des nouvelles offres (désactivable dans votre profil).
           </li>
         </ul>
       </Section>

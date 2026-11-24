@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { OfferCard, ReviewCard } from "@/components/stagio/shared";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicStats, listLatestReviews, listOffers } from "@/lib/api";
-import hero from "@/assets/stagio-students.asset.json";
+import heroImage from "@/assets/stagio-students.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -49,7 +49,10 @@ function Index() {
       <section className="hero">
         <img
           className="hero-photo"
-          src={hero.url}
+          src={heroImage}
+          width={1672}
+          height={941}
+          fetchPriority="high"
           alt="Trois étudiants tunisiens échangent autour d’un ordinateur dans un espace de travail"
         />
         <div className="hero-content">
