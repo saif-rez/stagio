@@ -82,3 +82,15 @@ src/modules/*/     routes par domaine (auth, companies, offers, internships, rev
 src/jobs/          tâches planifiées
 tests/             tests Vitest
 ```
+
+## Données de démonstration
+
+Les données fictives (25 avis, 15 offres, 3 entreprises proposées) se gèrent par SQL, dans
+Neon → **SQL Editor** :
+
+- `prisma/demo/add-demo-data.sql` : ajoute la démo (relançable sans doublon) ;
+- `prisma/demo/remove-demo-data.sql` : retire **toute** la démo avant l'ouverture aux vrais étudiants.
+
+Tout est marqué `isDemo = true` : le site affiche « Avis de démonstration » / « Démo », n'affiche aucun
+badge « vérifié », désactive « Postuler » et la demande de contact. Les comptes de démo
+(`@demo.stagio.invalid`) ne peuvent pas se connecter et ne reçoivent aucun email.

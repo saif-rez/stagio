@@ -43,6 +43,8 @@ export type RatingSummary = {
   /** null below 3 reviews ("Pas encore assez d'avis"). */
   average: number | null;
   criteria: { supervision: number; atmosphere: number; missions: number } | null;
+  /** Demonstration reviews included in this rating. */
+  demoCount: number;
 };
 
 export type CompanyRef = { id: string; name: string; city: string; sector: string };
@@ -62,6 +64,8 @@ export type Offer = {
   type: InternshipType;
   domain: string;
   sponsored: boolean;
+  /** Demonstration offer (labelled, cannot be applied to). */
+  demo: boolean;
   source: { name: string | null; url: string | null } | null;
   apply: { mode: ApplicationMode; url: string | null };
   companyRating: RatingSummary | null;
@@ -88,6 +92,8 @@ export type Review = {
   ratings: Ratings;
   comment: string;
   contactOptIn: boolean;
+  /** Demonstration review (labelled "Avis de démonstration"). */
+  demo: boolean;
   badges: { verifiedReview: boolean; verifiedInternship: boolean };
   reply: { body: string } | null;
   isMine: boolean;

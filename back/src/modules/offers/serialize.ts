@@ -13,6 +13,8 @@ export function isSponsoredNow(offer: { sponsored: boolean; sponsoredUntil: Date
 
 /** Where the "Postuler" button goes: external link, or the mail client with a pre-filled subject. */
 export function applyTarget(offer: OfferWithCompany) {
+  // Demonstration offers cannot be applied to.
+  if (offer.isDemo) return { mode: "LINK" as const, url: null };
   if (offer.applicationMode === "EMAIL" && offer.applicationEmail) {
     const subject = encodeURIComponent(`Candidature – ${offer.title} (Stagio)`);
     return { mode: "EMAIL" as const, url: `mailto:${offer.applicationEmail}?subject=${subject}` };
@@ -30,6 +32,8 @@ export function serializeOffer(offer: OfferWithCompany, rating?: RatingSummary) 
     type: offer.type,
     domain: offer.domain,
     sponsored: isSponsoredNow(offer),
+    /** Demonstration offer: labelled on the site, no "Postuler" button. */
+    demo: offer.isDemo,
     source: offer.sourceName || offer.sourceUrl ? { name: offer.sourceName, url: offer.sourceUrl } : null,
     apply: applyTarget(offer),
     companyRating: rating ?? null,

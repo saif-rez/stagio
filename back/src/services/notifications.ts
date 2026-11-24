@@ -19,8 +19,12 @@ export async function notify({ userId, type, title, body, link, email = true }: 
     data: { userId, type, title, body, link: link ?? null },
   });
   if (email) {
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-    if (user) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, isDemo: true },
+    });
+    // Demonstration accounts have unreachable addresses: never email them.
+    if (user && !user.isDemo) {
       const url = link ? new URL(link, env.FRONTEND_URL).toString() : undefined;
       // Email failures must never break the user action that triggered them.
       sendEmail(user.email, title, body, url).catch((err) =>

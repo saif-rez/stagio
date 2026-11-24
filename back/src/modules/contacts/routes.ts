@@ -72,7 +72,7 @@ contactsRouter.post("/", contactLimiter, async (req, res) => {
     .object({ reviewId: z.string().min(1), message: z.string().trim().min(1).max(CONTACT_MESSAGE_MAX) })
     .parse(req.body);
   const review = await prisma.review.findUnique({ where: { id: reviewId } });
-  if (!review || review.status !== "PUBLISHED" || !review.contactOptIn || !review.authorId)
+  if (!review || review.status !== "PUBLISHED" || !review.contactOptIn || !review.authorId || review.isDemo)
     throw badRequest("Cet(te) ancien(ne) stagiaire n'accepte pas les demandes de contact.", "CONTACT_NOT_ALLOWED");
   if (review.authorId === me.id) throw badRequest("Vous ne pouvez pas vous contacter vous-même.");
 

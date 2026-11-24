@@ -94,7 +94,10 @@ export function RatingInline({ rating }: { rating: RatingSummary | null | undefi
   return (
     <span className="rating-inline">
       <Star className="filled" />
-      {rating.average.toFixed(1)} <span>({rating.count} avis)</span>
+      {rating.average.toFixed(1)}{" "}
+      <span>
+        ({rating.count} avis{rating.demoCount > 0 ? ", démo" : ""})
+      </span>
     </span>
   );
 }
@@ -127,7 +130,10 @@ export function OfferCard({ offer }: { offer: Offer }) {
     <article className="offer-card">
       <div className="flex items-start justify-between gap-2">
         <Logo name={offer.company.name} />
-        {offer.sponsored && <Badge tone="amber">Sponsorisé</Badge>}
+        <div className="flex flex-wrap justify-end gap-1">
+          {offer.demo && <Badge tone="muted">Démo</Badge>}
+          {offer.sponsored && <Badge tone="amber">Sponsorisé</Badge>}
+        </div>
       </div>
       <p className="company-name">{offer.company.name}</p>
       <Link to="/offres/$id" params={{ id: offer.id }} className="offer-title">
@@ -236,10 +242,16 @@ export function ReviewCard({
             </p>
           </div>
         </div>
-        <Badge>
-          <ShieldCheck size={12} />
-          Avis vérifié
-        </Badge>
+        {review.demo ? (
+          <Badge tone="amber">Avis de démonstration</Badge>
+        ) : (
+          review.badges.verifiedReview && (
+            <Badge>
+              <ShieldCheck size={12} />
+              Avis vérifié
+            </Badge>
+          )
+        )}
       </div>
       {review.status && review.status !== "PUBLISHED" && (
         <div className="account-banner pending mb-3">{reviewStatusLabel[review.status]}</div>

@@ -21,7 +21,11 @@ export function serializeReview(review: ReviewWithRelations, viewer?: AuthUser) 
   return {
     id: review.id,
     company: review.company,
-    authorName: showName ? review.author!.name : ANONYMOUS_LABEL,
+    authorName: showName
+      ? review.author!.name
+      : review.isDemo
+        ? "Étudiant(e) – démo"
+        : ANONYMOUS_LABEL,
     anonymous: review.anonymous || !review.author,
     year: review.internship.year,
     type: review.internship.type,
@@ -32,12 +36,15 @@ export function serializeReview(review: ReviewWithRelations, viewer?: AuthUser) 
       missions: review.ratingMissions,
     },
     comment: review.comment,
-    contactOptIn: review.contactOptIn && !!review.author,
+    // Nobody answers on behalf of demonstration accounts.
+    contactOptIn: review.contactOptIn && !!review.author && !review.isDemo,
+    /** Demonstration review: the site shows an "Avis de démonstration" label. */
+    demo: review.isDemo,
     badges: {
       // Every review comes from a student verified by institutional email.
-      verifiedReview: true,
+      verifiedReview: !review.isDemo,
       // Certificate checked by the admin.
-      verifiedInternship: review.internship.status === "VERIFIED",
+      verifiedInternship: !review.isDemo && review.internship.status === "VERIFIED",
     },
     reply: review.reply ? { body: review.reply.body } : null,
     isMine,

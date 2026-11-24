@@ -123,6 +123,8 @@ model User {
   /// Terms of use (CGU) and privacy policy accepted at sign-up: when, and which version.
   termsAcceptedAt DateTime?
   termsVersion    String?
+  /// Demonstration account (cannot log in). Removed by prisma/demo/remove-demo-data.sql.
+  isDemo          Boolean        @default(false)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -161,6 +163,8 @@ model Company {
   status       CompanyStatus @default(PENDING)
   proposedById String?
   proposedBy   User?         @relation("CompanyProposer", fields: [proposedById], references: [id], onDelete: SetNull)
+  /// Demonstration record, shown with a "démo" label.
+  isDemo       Boolean       @default(false)
   owner        User?         @relation("CompanyOwner")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -211,6 +215,8 @@ model Offer {
   sponsorRequested Boolean         @default(false)
   active           Boolean         @default(true)
   views            Int             @default(0)
+  /// Demonstration offer: labelled on the site, no "Postuler" button.
+  isDemo           Boolean         @default(false)
   createdById      String?
   createdBy        User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt        DateTime        @default(now())
@@ -258,6 +264,8 @@ model Review {
   contactOptIn      Boolean      @default(false)
   status            ReviewStatus @default(PUBLISHED)
   reportCount       Int          @default(0)
+  /// Demonstration review: labelled "Avis de démonstration" on the site.
+  isDemo            Boolean      @default(false)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 

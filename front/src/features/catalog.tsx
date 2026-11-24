@@ -107,6 +107,7 @@ export function OfferDetail({ id }: { id: string }) {
       <div className="detail-layout">
         <div className="detail-body">
           <div className="flex gap-2 mb-5">
+            {offer.demo && <Badge tone="muted">Offre de démonstration</Badge>}
             {offer.sponsored && <Badge tone="amber">Sponsorisé</Badge>}
             <Badge>{internshipTypeLabel[offer.type]}</Badge>
             <Badge tone="muted">{offer.domain}</Badge>
@@ -132,6 +133,12 @@ export function OfferDetail({ id }: { id: string }) {
               )}
             </p>
           )}
+          {offer.demo && (
+            <div className="account-banner pending mt-6">
+              Offre de démonstration : elle illustre le fonctionnement de Stagio et ne correspond
+              pas à un poste réellement ouvert.
+            </div>
+          )}
           {offer.apply.url && (
             <Button asChild size="lg" className="mt-6">
               <a
@@ -156,7 +163,9 @@ export function OfferDetail({ id }: { id: string }) {
               <div className="flex gap-2 items-center">
                 <RatingStars value={rating.average} />
                 <strong>{rating.average.toFixed(1)}/5</strong>
-                <span className="text-xs text-muted-foreground">({rating.count} avis)</span>
+                <span className="text-xs text-muted-foreground">
+                  ({rating.count} avis{rating.demoCount > 0 ? ", démo" : ""})
+                </span>
               </div>
             ) : (
               <p>Pas encore assez d’avis</p>
@@ -222,7 +231,9 @@ export function CompaniesPage() {
                   <div className="flex items-center gap-2">
                     <RatingStars value={c.rating.average} small />
                     <strong className="text-xs">{c.rating.average.toFixed(1)}</strong>
-                    <span className="text-xs text-muted-foreground">· {c.rating.count} avis</span>
+                    <span className="text-xs text-muted-foreground">
+                      · {c.rating.count} avis{c.rating.demoCount > 0 ? " (démo)" : ""}
+                    </span>
                   </div>
                 ) : (
                   <p>Pas encore assez d’avis</p>
@@ -282,6 +293,11 @@ export function CompanyDetail({ id }: { id: string }) {
               <div className="mt-2">
                 <RatingStars value={rating.average} small />
               </div>
+              {rating.demoCount > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Dont {rating.demoCount} avis de démonstration
+                </p>
+              )}
             </>
           )}
         </div>
