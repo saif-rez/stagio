@@ -11,13 +11,18 @@ export async function getSession(): Promise<Session | null> {
   }
 }
 
-export const registerStudent = (body: { name: string; email: string; password: string }) =>
-  api<{ user: User }>("/auth/register/student", { method: "POST", body });
+export const registerStudent = (body: {
+  name: string;
+  email: string;
+  password: string;
+  acceptTerms: boolean;
+}) => api<{ user: User }>("/auth/register/student", { method: "POST", body });
 
 export type CompanySignup = {
   name: string;
   email: string;
   password: string;
+  acceptTerms: boolean;
   taxId: string;
   rne?: string;
   claimCompanyId?: string;

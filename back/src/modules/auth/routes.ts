@@ -7,7 +7,7 @@ import { signSession, sessionCookieOptions } from "../../lib/jwt.js";
 import { generateOtp, hashOtp, otpMatches, OTP_MAX_ATTEMPTS, OTP_TTL_MINUTES } from "../../lib/otp.js";
 import { getDummyHash, hashPassword, verifyPassword } from "../../lib/password.js";
 import { prisma } from "../../lib/prisma.js";
-import { emailDomain } from "../../lib/rules.js";
+import { emailDomain, TERMS_VERSION } from "../../lib/rules.js";
 import { deleteCertificate } from "../../lib/storage.js";
 import { currentUser, requireAuth } from "../../middleware/auth.js";
 import { authLimiter } from "../../middleware/rateLimit.js";
@@ -24,6 +24,11 @@ const password = z
   .regex(/\d/, "Au moins un chiffre.");
 const name = z.string().trim().min(2).max(100);
 const code = z.string().regex(/^\d{6}$/, "Code à 6 chiffres.");
+// The CGU and privacy policy must be explicitly accepted at sign-up.
+const acceptTerms = z.literal(true, {
+  error: "Vous devez accepter les conditions d'utilisation et la politique de confidentialité.",
+});
+const termsAcceptance = () => ({ termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION });
 
 function publicUser(user: Pick<User, "id" | "email" | "name" | "role" | "emailVerifiedAt" | "companyId">) {
   return {
@@ -77,7 +82,7 @@ function startSession(res: Response, user: Pick<User, "id" | "role">) {
 
 // --- Student sign-up: institutional email only, then 6-digit OTP ---
 authRouter.post("/register/student", authLimiter, async (req, res) => {
-  const body = z.object({ name, email, password }).parse(req.body);
+  const body = z.object({ name, email, password, acceptTerms }).parse(req.body);
   const establishment = await prisma.establishment.findUnique({
     where: { emailDomain: emailDomain(body.email) },
   });
@@ -94,6 +99,7 @@ authRouter.post("/register/student", authLimiter, async (req, res) => {
       email: body.email,
       passwordHash: await hashPassword(body.password),
       role: "STUDENT",
+      ...termsAcceptance(),
       establishmentId: establishment.id,
     },
   });
@@ -110,6 +116,7 @@ authRouter.post("/register/company", authLimiter, async (req, res) => {
       password,
       taxId: z.string().trim().min(4).max(50),
       rne: z.string().trim().max(50).optional(),
+      acceptTerms,
       claimCompanyId: z.string().optional(),
       company: z
         .object({
@@ -145,6 +152,7 @@ authRouter.post("/register/company", authLimiter, async (req, res) => {
         email: body.email,
         passwordHash: await hashPassword(body.password),
         role: "COMPANY",
+        ...termsAcceptance(),
       },
     });
     await tx.companyClaim.create({

@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CguEntrepriseRouteImport } from './routes/cgu-entreprise'
+import { Route as CguEtudiantRouteImport } from './routes/cgu-etudiant'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as EntrepriseRouteImport } from './routes/entreprise'
 import { Route as EntreprisesRouteImport } from './routes/entreprises'
@@ -36,6 +39,21 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CguEntrepriseRoute = CguEntrepriseRouteImport.update({
+  id: '/cgu-entreprise',
+  path: '/cgu-entreprise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CguEtudiantRoute = CguEtudiantRouteImport.update({
+  id: '/cgu-etudiant',
+  path: '/cgu-etudiant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnexionRoute = ConnexionRouteImport.update({
@@ -122,6 +140,9 @@ const OffresIdRoute = OffresIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cgu-entreprise': typeof CguEntrepriseRoute
+  '/cgu-etudiant': typeof CguEtudiantRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/entreprise': typeof EntrepriseRoute
   '/entreprises': typeof EntreprisesRoute
@@ -142,6 +163,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cgu-entreprise': typeof CguEntrepriseRoute
+  '/cgu-etudiant': typeof CguEtudiantRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/entreprise': typeof EntrepriseRoute
   '/entreprises': typeof EntreprisesRoute
@@ -163,6 +187,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cgu-entreprise': typeof CguEntrepriseRoute
+  '/cgu-etudiant': typeof CguEtudiantRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/entreprise': typeof EntrepriseRoute
   '/entreprises': typeof EntreprisesRoute
@@ -185,6 +212,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/cgu-entreprise'
+    | '/cgu-etudiant'
+    | '/confidentialite'
     | '/connexion'
     | '/entreprise'
     | '/entreprises'
@@ -205,6 +235,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/cgu-entreprise'
+    | '/cgu-etudiant'
+    | '/confidentialite'
     | '/connexion'
     | '/entreprise'
     | '/entreprises'
@@ -225,6 +258,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/cgu-entreprise'
+    | '/cgu-etudiant'
+    | '/confidentialite'
     | '/connexion'
     | '/entreprise'
     | '/entreprises'
@@ -246,6 +282,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CguEntrepriseRoute: typeof CguEntrepriseRoute
+  CguEtudiantRoute: typeof CguEtudiantRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
   EntrepriseRoute: typeof EntrepriseRoute
   EntreprisesRoute: typeof EntreprisesRoute
@@ -278,6 +317,27 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cgu-entreprise': {
+      id: '/cgu-entreprise'
+      path: '/cgu-entreprise'
+      fullPath: '/cgu-entreprise'
+      preLoaderRoute: typeof CguEntrepriseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cgu-etudiant': {
+      id: '/cgu-etudiant'
+      path: '/cgu-etudiant'
+      fullPath: '/cgu-etudiant'
+      preLoaderRoute: typeof CguEtudiantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connexion': {
@@ -398,6 +458,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CguEntrepriseRoute: CguEntrepriseRoute,
+  CguEtudiantRoute: CguEtudiantRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
   EntrepriseRoute: EntrepriseRoute,
   EntreprisesRoute: EntreprisesRoute,

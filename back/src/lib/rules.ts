@@ -7,6 +7,8 @@ export const MAX_CONTACTS_PER_DAY = 5;
 export const CONTACT_EXPIRY_DAYS = 7;
 export const ANONYMOUS_LABEL = "Étudiant(e) vérifié(e) – ISGB";
 export const DAY_MS = 24 * 60 * 60 * 1000;
+/** Version of the CGU / privacy policy accepted at sign-up (keep in sync with front/src/lib/legal.ts). */
+export const TERMS_VERSION = "2026-11-24";
 
 const insults = [
   "con",

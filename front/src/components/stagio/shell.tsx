@@ -145,6 +145,11 @@ export function Footer() {
           <Link to="/entreprises">Découvrir les entreprises</Link>
           <Link to="/inscription-entreprise">Espace entreprise</Link>
         </div>
+        <div className="footer-links">
+          <Link to="/cgu-etudiant">CGU étudiant</Link>
+          <Link to="/cgu-entreprise">CGU entreprise</Link>
+          <Link to="/confidentialite">Confidentialité</Link>
+        </div>
       </div>
       <div className="footer-bottom">
         <span>© 2026 Stagio. Fait pour les étudiants de l’ISGB.</span>

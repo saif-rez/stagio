@@ -96,12 +96,48 @@ function useSubmit() {
   return { busy, run };
 }
 
+/** Mandatory acceptance of the terms of use and privacy policy (stored with its version). */
+function TermsCheckbox({
+  checked,
+  onChange,
+  terms,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  terms: "/cgu-etudiant" | "/cgu-entreprise";
+}) {
+  return (
+    <label className="terms-check">
+      <input
+        type="checkbox"
+        required
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span>
+        J’accepte les{" "}
+        <Link to={terms} target="_blank">
+          {terms === "/cgu-etudiant"
+            ? "conditions d’utilisation étudiant"
+            : "conditions d’utilisation entreprise"}
+        </Link>{" "}
+        et la{" "}
+        <Link to="/confidentialite" target="_blank">
+          politique de confidentialité
+        </Link>
+        .
+      </span>
+    </label>
+  );
+}
+
 export function SignupPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const { busy, run } = useSubmit();
   const emailError = touched && !isStudentEmail(email);
 
@@ -109,12 +145,18 @@ export function SignupPage() {
     e.preventDefault();
     setTouched(true);
     if (!isStudentEmail(email)) return;
+    if (!accepted) return void toast.error("Acceptez les conditions d’utilisation pour continuer.");
     if (!validPassword(password))
       return void toast.error(
         "Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.",
       );
     void run(async () => {
-      await registerStudent({ name: name.trim(), email: email.trim(), password });
+      await registerStudent({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        acceptTerms: true,
+      });
       toast.success("Un code de vérification vous a été envoyé par email");
       void navigate({ to: "/verification", search: { email: email.trim().toLowerCase() } });
     });
@@ -155,6 +197,7 @@ export function SignupPage() {
           )}
         </label>
         <PasswordField value={password} onChange={setPassword} hint />
+        <TermsCheckbox checked={accepted} onChange={setAccepted} terms="/cgu-etudiant" />
         <Button type="submit" disabled={busy}>
           Créer mon compte
           <ArrowRight />
@@ -396,6 +439,7 @@ export function CompanySignupPage() {
     taxId: "",
     rne: "",
     claimCompanyId: "",
+    accepted: false as boolean,
     companyName: "",
     city: "",
     sector: "",
@@ -415,10 +459,13 @@ export function CompanySignupPage() {
       return void toast.error(
         "Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.",
       );
+    if (!form.accepted)
+      return void toast.error("Acceptez les conditions d’utilisation pour continuer.");
     if (mode === "claim" && !form.claimCompanyId)
       return void toast.error("Choisissez votre fiche entreprise.");
     void run(async () => {
       await registerCompany({
+        acceptTerms: true,
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
@@ -543,6 +590,11 @@ export function CompanySignupPage() {
             </label>
           </>
         )}
+        <TermsCheckbox
+          checked={form.accepted}
+          onChange={(v) => setForm((f) => ({ ...f, accepted: v }))}
+          terms="/cgu-entreprise"
+        />
         <Button type="submit" disabled={busy}>
           Envoyer ma demande
           <ArrowRight />

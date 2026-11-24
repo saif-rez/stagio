@@ -36,6 +36,16 @@ describe("HTTP layer", () => {
     expect(Array.isArray(res.body.error.details)).toBe(true);
   });
 
+  it("refuses sign-up without accepting the terms", async () => {
+    const res = await request(app).post("/api/auth/register/student").send({
+      name: "Test Étudiant",
+      email: "test@isgb.ucar.tn",
+      password: "Motdepasse1",
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe("acceptTerms");
+  });
+
   it.each([
     ["get", "/api/auth/me"],
     ["get", "/api/internships/me"],

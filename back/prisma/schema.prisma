@@ -120,6 +120,9 @@ model User {
   followedDomains String[]       @default([])
   digestEnabled   Boolean        @default(true)
   lastDigestAt    DateTime?
+  /// Terms of use (CGU) and privacy policy accepted at sign-up: when, and which version.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
