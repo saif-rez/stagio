@@ -67,7 +67,7 @@ export function StudentTermsPage() {
         <ul>
           <li>
             L’inscription est réservée aux étudiants disposant d’une adresse email institutionnelle
-            (@isgb.ucar.tn). Le compte est activé après saisie du code envoyé à cette adresse.
+            (@isgb.ucar.tn). Le compte est actif dès sa création.
           </li>
           <li>Vous êtes responsable de la confidentialité de votre mot de passe.</li>
           <li>
@@ -307,12 +307,12 @@ export function PrivacyPage() {
       </Section>
       <Section title="3. Finalités">
         <ul>
-          <li>Vérifier que les utilisateurs sont de vrais étudiants ou de vraies entreprises.</li>
+          <li>Réserver l’inscription aux adresses institutionnelles des étudiants et vérifier les entreprises (matricule fiscal / RNE).</li>
           <li>Publier les avis et les offres, et calculer les notes des entreprises.</li>
           <li>Modérer les contenus signalés et lutter contre les faux avis.</li>
           <li>Mettre en relation les étudiants qui l’acceptent.</li>
           <li>
-            Envoyer les emails liés au service : codes de vérification, notifications, et résumé des
+            Envoyer les emails liés au service : codes de réinitialisation du mot de passe, notifications, et résumé des
             nouvelles offres (désactivable dans votre profil).
           </li>
         </ul>
@@ -344,7 +344,7 @@ export function PrivacyPage() {
             Avis : conservés après la suppression du compte, mais anonymisés et détachés de toute
             identité.
           </li>
-          <li>Codes de vérification : 10 minutes maximum.</li>
+          <li>Codes de réinitialisation du mot de passe : 10 minutes maximum.</li>
           <li>Demandes de contact : expirées après 7 jours sans réponse.</li>
         </ul>
       </Section>

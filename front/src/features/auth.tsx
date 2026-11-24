@@ -1,8 +1,9 @@
-// Authentication pages: student sign-up, OTP verification, login, password reset, company sign-up.
+// Authentication pages: student sign-up, login, password reset, company sign-up.
+// Sign-up has no email verification step: the account is active and signed in right away.
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Building2, Check, GraduationCap, KeyRound, Mail } from "lucide-react";
+import { ArrowRight, Building2, GraduationCap, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,16 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { sessionKey } from "@/components/stagio/session";
 import {
-  ApiError,
   errorMessage,
   forgotPassword,
   listCompanies,
   login,
   registerCompany,
   registerStudent,
-  resendOtp,
   resetPassword,
-  verifyEmail,
 } from "@/lib/api";
 import { isStudentEmail, validPassword } from "@/lib/rules";
 import type { Role } from "@/types";
@@ -133,6 +131,7 @@ function TermsCheckbox({
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -157,8 +156,9 @@ export function SignupPage() {
         password,
         acceptTerms: true,
       });
-      toast.success("Un code de vérification vous a été envoyé par email");
-      void navigate({ to: "/verification", search: { email: email.trim().toLowerCase() } });
+      await qc.invalidateQueries({ queryKey: sessionKey });
+      toast.success("Bienvenue sur Stagio ! Votre compte est créé.");
+      void navigate({ to: "/offres" });
     });
   }
 
@@ -229,19 +229,10 @@ export function LoginPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     void run(async () => {
-      try {
-        const { user } = await login({ email: email.trim(), password });
-        await qc.invalidateQueries({ queryKey: sessionKey });
-        toast.success(`Bienvenue, ${user.name}`);
-        void navigate({ to: homeFor(user.role) });
-      } catch (err) {
-        if (err instanceof ApiError && err.code === "EMAIL_NOT_VERIFIED") {
-          toast.info(err.message);
-          void navigate({ to: "/verification", search: { email: email.trim().toLowerCase() } });
-          return;
-        }
-        throw err;
-      }
+      const { user } = await login({ email: email.trim(), password });
+      await qc.invalidateQueries({ queryKey: sessionKey });
+      toast.success(`Bienvenue, ${user.name}`);
+      void navigate({ to: homeFor(user.role) });
     });
   }
 
@@ -301,64 +292,6 @@ function OtpInput({ value, onChange }: { value: string; onChange: (v: string) =>
         </InputOTPGroup>
       </InputOTP>
     </div>
-  );
-}
-
-export function VerificationPage({ initialEmail }: { initialEmail?: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [email, setEmail] = useState(initialEmail ?? "");
-  const [otp, setOtp] = useState("");
-  const { busy, run } = useSubmit();
-
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    if (otp.length !== 6 || !email) return;
-    void run(async () => {
-      const { user } = await verifyEmail({ email: email.trim(), code: otp });
-      await qc.invalidateQueries({ queryKey: sessionKey });
-      toast.success("Votre adresse email est vérifiée");
-      void navigate({ to: homeFor(user.role) });
-    });
-  }
-
-  return (
-    <AuthCard
-      icon={<Mail />}
-      title="Vérifiez votre adresse email"
-      subtitle={
-        email
-          ? `Saisissez le code à 6 chiffres envoyé à ${email}. Il expire dans 10 minutes.`
-          : "Saisissez votre email et le code reçu."
-      }
-    >
-      <form className="form-stack" onSubmit={submit}>
-        {!initialEmail && (
-          <label className="form-field">
-            Adresse email
-            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          </label>
-        )}
-        <OtpInput value={otp} onChange={setOtp} />
-        <Button type="submit" disabled={busy || otp.length !== 6 || !email}>
-          Vérifier mon email
-          <Check />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!email}
-          onClick={() =>
-            void run(async () => {
-              await resendOtp(email.trim());
-              toast.success("Un nouveau code vous a été envoyé");
-            })
-          }
-        >
-          Renvoyer le code
-        </Button>
-      </form>
-    </AuthCard>
   );
 }
 
@@ -431,6 +364,7 @@ export function ForgotPasswordPage() {
 /** Company account: claim an existing page or create a new one. Validated by the admin (tax ID / RNE). */
 export function CompanySignupPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [mode, setMode] = useState<"claim" | "create">("claim");
   const [form, setForm] = useState({
     name: "",
@@ -482,10 +416,9 @@ export function CompanySignupPage() {
               },
             }),
       });
-      toast.success(
-        "Compte créé. Vérifiez votre email : votre dossier sera ensuite examiné par l’équipe Stagio.",
-      );
-      void navigate({ to: "/verification", search: { email: form.email.trim().toLowerCase() } });
+      await qc.invalidateQueries({ queryKey: sessionKey });
+      toast.success("Compte créé. Votre dossier va être examiné par l’équipe Stagio.");
+      void navigate({ to: "/entreprise" });
     });
   }
 

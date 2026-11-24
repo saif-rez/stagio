@@ -32,12 +32,6 @@ export type CompanySignup = {
 export const registerCompany = (body: CompanySignup) =>
   api<{ user: User }>("/auth/register/company", { method: "POST", body });
 
-export const verifyEmail = (body: { email: string; code: string }) =>
-  api<{ user: User }>("/auth/verify-email", { method: "POST", body });
-
-export const resendOtp = (email: string) =>
-  api<{ ok: true }>("/auth/resend-otp", { method: "POST", body: { email } });
-
 export const login = (body: { email: string; password: string }) =>
   api<{ user: User }>("/auth/login", { method: "POST", body });
 

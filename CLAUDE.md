@@ -13,7 +13,7 @@ Application web (mobile-first) pour les étudiants de l'ISGB (Tunisie) : offres 
 - Le sponsoring n'influence jamais les notes. L'entreprise ne peut ni supprimer ni modifier un avis : seulement répondre (1 réponse) ou signaler.
 - Avis masqué automatiquement à partir de 3 signalements.
 - Contact ancien stagiaire : opt-in "J'accepte d'être contacté", message 300 caractères max, 5 demandes/jour, expiration 7 jours. Pas de messagerie interne.
-- Inscription étudiant : email @isgb.ucar.tn uniquement + code OTP à 6 chiffres.
+- Inscription étudiant : email @isgb.ucar.tn uniquement. PAS de vérification par email à l'inscription (décision du 24/11/2026) : le compte est actif et connecté immédiatement. Le code OTP à 6 chiffres ne sert plus qu'à « Mot de passe oublié ».
 - Rôles : Étudiant, Entreprise, Admin (pas de rôle Professeur).
 - Champ "établissement" présent dans les modèles (multi-facultés plus tard).
 

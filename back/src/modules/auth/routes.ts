@@ -80,7 +80,7 @@ function startSession(res: Response, user: Pick<User, "id" | "role">) {
   res.cookie(env.COOKIE_NAME, signSession({ sub: user.id, role: user.role }), sessionCookieOptions());
 }
 
-// --- Student sign-up: institutional email only, then 6-digit OTP ---
+// --- Student sign-up: institutional email only. Account active and signed in immediately. ---
 authRouter.post("/register/student", authLimiter, async (req, res) => {
   const body = z.object({ name, email, password, acceptTerms }).parse(req.body);
   const establishment = await prisma.establishment.findUnique({
@@ -100,11 +100,13 @@ authRouter.post("/register/student", authLimiter, async (req, res) => {
       passwordHash: await hashPassword(body.password),
       role: "STUDENT",
       ...termsAcceptance(),
+      // No email verification step (product decision): the account is active right away.
+      emailVerifiedAt: new Date(),
       establishmentId: establishment.id,
     },
   });
-  await issueOtp(user.id, user.email, "VERIFY_EMAIL");
-  res.status(201).json({ user: publicUser(user), next: "VERIFY_EMAIL" });
+  startSession(res, user);
+  res.status(201).json({ user: publicUser(user) });
 });
 
 // --- Company sign-up: creates (or claims) a company page, pending admin validation ---
@@ -153,6 +155,7 @@ authRouter.post("/register/company", authLimiter, async (req, res) => {
         passwordHash: await hashPassword(body.password),
         role: "COMPANY",
         ...termsAcceptance(),
+        emailVerifiedAt: new Date(),
       },
     });
     await tx.companyClaim.create({
@@ -160,31 +163,9 @@ authRouter.post("/register/company", authLimiter, async (req, res) => {
     });
     return created;
   });
-  await issueOtp(user.id, user.email, "VERIFY_EMAIL");
-  res.status(201).json({ user: publicUser(user), next: "VERIFY_EMAIL", accountStatus: "PENDING" });
-});
-
-authRouter.post("/verify-email", authLimiter, async (req, res) => {
-  const body = z.object({ email, code }).parse(req.body);
-  const user = await prisma.user.findUnique({ where: { email: body.email } });
-  if (!user) throw badRequest("Code incorrect.", "OTP_INVALID");
-  if (user.emailVerifiedAt)
-    throw conflict("Adresse déjà vérifiée. Connectez-vous.", "ALREADY_VERIFIED");
-  await consumeOtp(user.id, "VERIFY_EMAIL", body.code);
-  const verified = await prisma.user.update({
-    where: { id: user.id },
-    data: { emailVerifiedAt: new Date() },
-  });
-  startSession(res, verified);
-  res.json({ user: publicUser(verified) });
-});
-
-authRouter.post("/resend-otp", authLimiter, async (req, res) => {
-  const body = z.object({ email }).parse(req.body);
-  const user = await prisma.user.findUnique({ where: { email: body.email } });
-  // Same answer whether the account exists or not (no account enumeration).
-  if (user && !user.emailVerifiedAt) await issueOtp(user.id, user.email, "VERIFY_EMAIL");
-  res.json({ ok: true });
+  // Signed in right away; company tools stay locked until the admin validates the claim.
+  startSession(res, user);
+  res.status(201).json({ user: publicUser(user), accountStatus: "PENDING" });
 });
 
 authRouter.post("/login", authLimiter, async (req, res) => {
@@ -192,12 +173,12 @@ authRouter.post("/login", authLimiter, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email: body.email } });
   const valid = await verifyPassword(user?.passwordHash ?? (await getDummyHash()), body.password);
   if (!user || !valid) throw unauthorized("Email ou mot de passe incorrect.");
-  if (!user.emailVerifiedAt) {
-    await issueOtp(user.id, user.email, "VERIFY_EMAIL");
-    throw forbidden("Vérifiez votre adresse email : un nouveau code vous a été envoyé.", "EMAIL_NOT_VERIFIED");
-  }
-  startSession(res, user);
-  res.json({ user: publicUser(user) });
+  // Accounts created before email verification was removed are activated at first login.
+  const active = user.emailVerifiedAt
+    ? user
+    : await prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
+  startSession(res, active);
+  res.json({ user: publicUser(active) });
 });
 
 authRouter.post("/logout", (_req, res) => {

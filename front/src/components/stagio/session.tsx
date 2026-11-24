@@ -78,19 +78,5 @@ export function RequireRole({
     );
   if (session.user.role !== role)
     return <Gate title="Accès réservé" text="Cet espace n’est pas disponible pour votre compte." />;
-  if (role === "STUDENT" && !session.user.emailVerified)
-    return (
-      <Gate
-        title="Vérifiez votre adresse email"
-        text="Saisissez le code reçu par email pour activer votre compte."
-        action={
-          <Button asChild className="w-full">
-            <Link to="/verification" search={{ email: session.user.email }}>
-              Saisir mon code
-            </Link>
-          </Button>
-        }
-      />
-    );
   return <>{children(session)}</>;
 }
